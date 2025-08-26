@@ -24,7 +24,9 @@ func useGin() {
 	routers.Router(server)
 
 	port := os.Getenv("API_PORT")
-	err := server.Run(port)
+	crtFile := "server.crt"
+	keyFile := "server.key"
+	err := server.RunTLS(port, crtFile, keyFile)
 	if err != nil {
 		fmt.Println("Failed to RUN the server:", err)
 		return

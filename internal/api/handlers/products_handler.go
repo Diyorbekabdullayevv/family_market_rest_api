@@ -87,6 +87,7 @@ func PostProducts(context *gin.Context) {
 		}
 	}
 	context.JSON(http.StatusCreated, gin.H{"Status": "Products have been successfully stored in the database!"})
+	context.JSON(http.StatusCreated, gin.H{"Status": "Something new happened here!"})
 }
 
 func GetStructValues(model interface{}) []interface{} {
