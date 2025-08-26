@@ -1,0 +1,13 @@
+POST http://localhost:8080/products
+Content-Type: application/json
+
+
+   [
+        {
+        "product_name": "Sony",
+        "product_type": "battery",
+        "description": "Have one and never need another!",
+        "category": "electronics",
+        "brand": "Sony"
+        }
+   ]
