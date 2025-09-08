@@ -1,13 +1,13 @@
-POST https://localhost:8080/products
+POST http://localhost:8080/products
 Content-Type: application/json
 
 
    [
         {
-        "product_name": "Kefir",
-        "product_type": "dairy",
-        "description": "Don`t eat your dumplings without me!",
+        "product_name": "Hydrolife",
+        "product_type": "dizzy-water",
+        "description": "Helps to digest after heavy dinner!",
         "category": "food",
-        "brand": "Milky"
+        "brand": "Waterly"
         }
    ]

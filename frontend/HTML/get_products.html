@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Products</title>
+        <link rel="icon" type="image/png" href="/static/images/white_bg.jpg" />
+    </head>
+    <body>
+        <h1>Welcome Products!</h1>
+        <form action="/products" method="POST">
+            <label for="product_id"><b>Enter product ID:</b></label>
+            <input
+                type="text"
+                id="product_id"
+                name="product_id"
+                placeholder="product_id"
+            />
+            <button type="submit">Send</button>
+        </form>
+        <a href="/">
+            <button style="color: green">Home page!</button>
+        </a>
+    </body>
+</html>

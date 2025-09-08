@@ -4,101 +4,198 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"reflect"
 
 	"github.com/gin-gonic/gin"
 	dbconnect "practice_gin.com/internal/dbConnect"
 	"practice_gin.com/internal/models"
 )
 
-func GetProducts(context *gin.Context) {
+func HomePage(ctx *gin.Context) {
 
-	id := context.Param("id")
+	product := models.Product{
+		Name:        "--------",
+		Type:        "--------",
+		Description: "--------",
+	}
+	ctx.HTML(http.StatusOK, "homepage.html", product)
+}
+
+func GetProductHomePage(ctx *gin.Context) {
+
+	productName := ctx.PostForm("search_input")
+	if productName != "" {
+		db, err := dbconnect.ConnectDB()
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to CONNECT to database!"})
+			fmt.Println("Error:", err)
+			return
+		}
+		defer db.Close()
+		var product models.Product
+		err = db.QueryRow(`SELECT name, type, description, cost FROM products WHERE name = ?`, productName).
+			Scan(&product.Name, &product.Type, &product.Description, &product.Cost)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Product doesn`t exist with this name!"})
+				return
+			}
+			ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to SEND a query to database!"})
+			fmt.Println("Error:", err)
+			return
+		}
+		ctx.HTML(http.StatusOK, "homepage.html", product)
+	}
+}
+
+func PurchaseProducts(ctx *gin.Context) {
+
+}
+
+func GetProducts(ctx *gin.Context) {
+	ctx.HTML(http.StatusOK, "get_products.html", nil)
+}
+
+func HandlerProductsForm(ctx *gin.Context) {
+	product_id := ctx.PostForm("product_id")
+	fmt.Println("id:", product_id)
+	redirectUrl := fmt.Sprintf("/products/%v", product_id)
+	fmt.Println(redirectUrl)
+	ctx.Redirect(http.StatusFound, redirectUrl)
+}
+
+func GetProductByID(ctx *gin.Context) {
+
+	id := ctx.Param("id")
 
 	db, err := dbconnect.ConnectDB()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to CONNECT to database!"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to CONNECT to database!"})
 		fmt.Println("Error:", err)
 	}
 	defer db.Close()
 
-	var product models.Products
-	err = db.QueryRow(`SELECT product_name, product_type, description, category, brand, is_available FROM products WHERE product_id = ?`, id).
-		Scan(&product.Name, &product.Type, &product.Description, &product.Category, &product.Brand, &product.IsAvailable)
+	var product models.Product
+	err = db.QueryRow(`SELECT name, type, description, is_available, cost FROM products WHERE id = ?`, id).
+		Scan(&product.Name, &product.Type, &product.Description, &product.IsAvailable, &product.Cost)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			context.JSON(http.StatusInternalServerError, gin.H{"Error": "Product not found!"})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Product not found!"})
 			fmt.Println("Product not found:", err)
 		}
-		context.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to SEND a query to database!"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to SEND a query to database!"})
 		fmt.Println("Failed to SEND a query to database:", err)
 	}
-	context.JSON(http.StatusOK, gin.H{"Product": product})
-	// context.JSON(http.StatusOK, gin.H{"Content": "My GET request response!"})
+
+	ctx.HTML(http.StatusOK, "get_product.html", product)
 }
 
-func PostProducts(context *gin.Context) {
-	var products []models.Products
-	err := context.ShouldBindBodyWithJSON(&products)
+func AddProducts(ctx *gin.Context) {
+	var products []models.Product
+	err := ctx.ShouldBindBodyWithJSON(&products)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to DECODE request body!"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to DECODE request body!"})
 		fmt.Println("Failed to DECODE request body:", err)
 	}
 
 	db, err := dbconnect.ConnectDB()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to CONNECT to database!"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to CONNECT to database!"})
 		fmt.Println("Failed to CONNECT to database:", err)
 	}
 	defer db.Close()
 
-	rows, err := db.Query(`SELECT product_name, product_type, description, category, brand, is_available FROM products`)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to SEND query to database!"})
-		fmt.Println("Failed to SEND query to database:", err)
-	}
-	defer rows.Close()
-
-	var retrievedProductsList []models.Products
-	for rows.Next() {
-		var retrievedProduct models.Products
-		err = rows.Scan(&retrievedProduct.Name, &retrievedProduct.Type, &retrievedProduct.Description, &retrievedProduct.Category, &retrievedProduct.Brand, &retrievedProduct.IsAvailable)
-		if err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to RETRIEVE data from database!"})
-			fmt.Println("Failed to RETRIEVE data from database:", err)
-		}
-		retrievedProductsList = append(retrievedProductsList, retrievedProduct)
-	}
-
 	for _, product := range products {
 
-		for _, retrievedProduct := range retrievedProductsList {
-			if retrievedProduct.Name == product.Name {
-				context.JSON(http.StatusBadRequest, gin.H{"Error": "Product with this name already exists!"})
-				return
-			}
+		_, err = db.Exec(`
+		INSERT INTO products(
+			name,
+			type,
+			description,
+			category_id,
+			brand_id,
+			is_available,
+			unit_number,
+			barcode,
+			manufacture_date,
+			receive_date,
+			expiry_date,
+			stock_keeping_date,
+			cost,
+			discount
+		) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			product.Name,
+			product.Type,
+			product.Description,
+			product.CategoryID,
+			product.BrandID,
+			product.IsAvailable,
+			product.UnitNumber,
+			product.Barcode,
+			product.ManufactureDate,
+			product.ReceiveDate,
+			product.ExpiryDate,
+			product.StockKeepingDate,
+			product.Cost,
+			product.Discount,
+		)
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert product into database"})
+			fmt.Println("Failed to insert product into database:", err)
+			return
 		}
 
-		_, err = db.Exec(`INSERT INTO products(product_name, product_type, description, category, brand) VALUES(?,?,?,?,?)`,
-			product.Name, product.Type, product.Description, product.Category, product.Brand)
-		if err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to EXECUTE data to database!"})
-			fmt.Println("Failed to EXECUTE data to database:", err)
-		}
 	}
-	context.JSON(http.StatusCreated, gin.H{"Status": "Products have been successfully stored in the database!"})
-	context.JSON(http.StatusCreated, gin.H{"Status": "Something new happened here!"})
+	ctx.JSON(http.StatusCreated, gin.H{"Status": "Products have been successfully stored in the database!"})
+	ctx.JSON(http.StatusCreated, gin.H{"Status": "Something new happened here!"})
 }
 
-func GetStructValues(model interface{}) []interface{} {
-	modelValue := reflect.ValueOf(model)
-	modelType := modelValue.Type()
-	values := []interface{}{}
-	for i := 0; i < modelType.NumField(); i++ {
-		dbTag := modelType.Field(i).Tag.Get("db")
-		if dbTag != "" && dbTag != "id,omitempty" {
-			values = append(values, modelValue.Field(i).Interface())
+func AddCategories(ctx *gin.Context) {
+	var categories []models.Category
+	err := ctx.ShouldBindBodyWithJSON(&categories)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to DECODE request body!"})
+		fmt.Println("Failed to DECODE request body:", err)
+	}
+
+	db, err := dbconnect.ConnectDB()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to CONNECT to database!"})
+		fmt.Println("Failed to CONNECT to database:", err)
+	}
+	defer db.Close()
+
+	for _, category := range categories {
+		_, err = db.Exec(`INSERT INTO categories(name) VALUES(?)`, category.Name)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert product into database"})
+			fmt.Println("Failed to insert product into database:", err)
+			return
 		}
 	}
-	return values
+}
+
+func AddBrands(ctx *gin.Context) {
+	var brands []models.Brand
+	err := ctx.ShouldBindBodyWithJSON(&brands)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to DECODE request body!"})
+		fmt.Println("Failed to DECODE request body:", err)
+	}
+
+	db, err := dbconnect.ConnectDB()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": "Failed to CONNECT to database!"})
+		fmt.Println("Failed to CONNECT to database:", err)
+	}
+	defer db.Close()
+
+	for _, brand := range brands {
+		_, err = db.Exec(`INSERT INTO brands(name) VALUES(?)`, brand.Name)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert product into database"})
+			fmt.Println("Failed to insert product into database:", err)
+			return
+		}
+	}
 }

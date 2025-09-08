@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Family Market</title>
+        <link rel="icon" type="image/png" href="/static/images/white_bg.jpg" />
+    </head>
+    <body>
+        <h1 style="color: blue">Product!</h1>
+        <ol type="1">
+            <li><b>Product name:</b> {{.Name}}</li>
+            <li><b>Product type:</b> {{.Type}}</li>
+            <li><b>Product description:</b> {{.Description}}</li>
+            <li><b>Product available:</b> {{.IsAvailable}}</li>
+            <li><b>Product cost:</b> ${{.Cost}}</li>
+        </ol>
+        <a href="http://localhost:8080/products">
+            <button style="color: blue">Main page!</button></a
+        >
+        <a href="http://localhost:8080">
+            <button style="color: blue">Home page!</button></a
+        >
+    </body>
+</html>
