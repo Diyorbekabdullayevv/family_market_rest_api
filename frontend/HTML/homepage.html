@@ -4,7 +4,13 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Family Market</title>
-        <link rel="icon" type="image/png" href="/static/images/white_bg.jpg" />
+        <link
+            rel="icon"
+            type="image/png"
+            href="/static/images/white_bg.jpg"
+            class="icon"
+            style="border-radius: 30%"
+        />
     </head>
     <body>
         <div class="header">
@@ -33,16 +39,16 @@
                 </form>
             </div>
             <div class="btns">
-                <a href="/products/catalog" class="get_products">
+                <a href="/catalog" class="get_products">
                     <button class="product_btns">Catalog</button>
                 </a>
-                <a href="/products/cart" class="get_products">
+                <a href="/cart" class="get_products">
                     <button class="product_btns">Cart</button>
                 </a>
                 <a href="/products" class="get_products">
                     <button class="product_btns">Get products</button>
                 </a>
-                <a href="/products/catalog" class="get_products">
+                <a href="/admins" class="get_products">
                     <button class="product_btns">Admins</button>
                 </a>
             </div>
@@ -92,6 +98,10 @@
                 align-items: center;
                 justify-content: center;
             }
+
+            /* .icon {
+                border-radius: 50%;
+            } */
 
             .header {
                 display: flex;
